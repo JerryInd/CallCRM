@@ -1,0 +1,47 @@
+name = "crm-dialer"
+main = "src/api/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "crm-d1"
+database_id = "8965016d-7390-42db-a2f7-9dc54c829cd5"
+
+# Durable Object for lead reservation coordination
+[durable_objects]
+bindings = [
+  { name = "LEAD_RESERVATION", class_name = "LeadReservation" },
+  { name = "CHAT_ROOM", class_name = "ChatRoom" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LeadReservation"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["ChatRoom"]
+
+# Static assets (frontend)
+[assets]
+directory = "frontend/dist"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
+not_found_handling = "single-page-application"
+
+# Queue for async notification processing
+[[queues.producers]]
+queue = "notification-queue"
+binding = "NOTIFICATION_QUEUE"
+
+[[queues.consumers]]
+queue = "notification-queue"
+
+# Cron trigger: sync Google Sheets ↔ D1 every minute (Cloudflare minimum)
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+ENVIRONMENT = "production"
