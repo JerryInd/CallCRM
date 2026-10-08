@@ -1,24 +1,9 @@
 // Node runtime compatibility layer for the Cloudflare Worker backend.
-// - SqliteD1: D1Database-compatible facade over a local SQLite database
-//   (better-sqlite3; drizzle-orm/d1 works unchanged) — runtime-agnostic, no
-//   node:sqlite dependency, so it runs on any Node version Voroa provides.
+// - SqliteD1: D1Database-compatible facade over node:sqlite (drizzle-orm/d1 works unchanged)
 // - ChatRoomNode / LeadReservationNode: in-process equivalents of the Durable Objects
 // - createNodeBindings(): builds the `env` object (Bindings) the routes expect
+import type { DatabaseSync } from 'node:sqlite';
 import { processNotificationQueue } from './services/push-notifications';
-
-// Minimal structural surface of a prepared statement (satisfied by both
-// better-sqlite3 and node:sqlite StatementSync).
-export interface SqliteStatement {
-  run(...params: unknown[]): { changes: number | bigint; lastInsertRowid: number | bigint };
-  all(...params: unknown[]): Record<string, unknown>[];
-  get(...params: unknown[]): Record<string, unknown> | undefined;
-}
-
-// Minimal structural surface of a SQLite database handle.
-export interface SqliteHandle {
-  prepare(sql: string): SqliteStatement;
-  exec(sql: string): unknown;
-}
 
 function normalizeParam(v: unknown): unknown {
   if (v === undefined) return null;
@@ -37,7 +22,7 @@ interface D1Result {
 
 class BoundStatement {
   constructor(
-    private db: SqliteHandle,
+    private db: DatabaseSync,
     private sql: string,
     private params: unknown[]
   ) {}
@@ -92,7 +77,7 @@ class BoundStatement {
 }
 
 class Prepared {
-  constructor(private db: SqliteHandle, private sql: string) {}
+  constructor(private db: DatabaseSync, private sql: string) {}
   bind(...params: unknown[]): BoundStatement {
     return new BoundStatement(this.db, this.sql, params);
   }
@@ -112,7 +97,7 @@ class Prepared {
 }
 
 export class SqliteD1 {
-  constructor(private sqlite: SqliteHandle) {}
+  constructor(private sqlite: DatabaseSync) {}
 
   prepare(sql: string): Prepared {
     return new Prepared(this.sqlite, sql);
@@ -373,7 +358,7 @@ export interface NodeBindings {
 export const chatRoom = new ChatRoomNode();
 export const leadReservation = new LeadReservationNode();
 
-export function createNodeBindings(sqlite: SqliteHandle): NodeBindings {
+export function createNodeBindings(sqlite: DatabaseSync): NodeBindings {
   const env = {
     DB: new SqliteD1(sqlite) as any,
     ASSETS: {

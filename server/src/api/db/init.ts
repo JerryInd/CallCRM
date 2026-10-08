@@ -5,7 +5,7 @@
 // Statements are executed individually so re-runs are safe, and the users
 // table/seed is only (re)created when the database is empty — restarting the
 // service never wipes admin-created users or resets the admin password.
-import type { SqliteHandle } from '../node-compat';
+import type { DatabaseSync } from 'node:sqlite';
 import migrationSql from './migration.sql';
 import alignSql from './align.sql';
 
@@ -82,7 +82,7 @@ function isIgnorableError(err: unknown): boolean {
   return /already exists|duplicate column/i.test(msg);
 }
 
-function countUsers(db: SqliteHandle): number {
+function countUsers(db: DatabaseSync): number {
   try {
     const row = db.prepare('SELECT COUNT(*) AS c FROM users').get() as { c: number } | undefined;
     return Number(row?.c ?? 0);
@@ -91,7 +91,7 @@ function countUsers(db: SqliteHandle): number {
   }
 }
 
-export function initDatabase(db: SqliteHandle): void {
+export function initDatabase(db: DatabaseSync): void {
   const usersExistWithRows = countUsers(db) > 0;
 
   // 1. Baseline (creates tables if missing; existing-table errors are ignored)
