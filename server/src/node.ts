@@ -11,6 +11,8 @@ import type { Duplex } from 'node:stream';
 import { app } from './api/app';
 import { createNodeBindings, chatRoom } from './api/node-compat';
 import { initDatabase } from './api/db/init';
+import { createDB } from './api/db';
+import { bootstrapSheetFromEnv } from './api/db/env-bootstrap';
 import { verifyToken } from './api/lib/auth';
 import { runSync } from './api/services/google-sheets-sync';
 import { autoAssignFollowUps } from './api/services/followup-assign';
@@ -23,6 +25,10 @@ mkdirSync(path.dirname(DB_FILE), { recursive: true });
 const sqlite = new DatabaseSync(DB_FILE);
 initDatabase(sqlite);
 const env = createNodeBindings(sqlite);
+
+bootstrapSheetFromEnv(createDB(env as any), process.env).catch((err) => {
+  console.error('Sheet env bootstrap error:', err);
+});
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
