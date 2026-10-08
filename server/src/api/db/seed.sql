@@ -1,4 +1,4 @@
 -- Minimal seed: admin user only
--- Password: admin123 (bcrypt hash)
+-- Password: Sushil$21 (bcrypt hash)
 INSERT OR IGNORE INTO users (id, name, email, password_hash, role, active, created_at, updated_at)
-VALUES ('admin-001', 'Admin', 'admin@crm.com', '$2a$12$LJ3m4ys3Lz0YBNOURq0Y3OjCfKJmKPOJYqDTPVCKzLOBhZMHfWO6e', 'ADMIN', 1, datetime('now'), datetime('now'));
+VALUES ('admin-001', 'Admin', 'canyoujerry@gmail.com', '$2b$12$.Z1xqL3iujzgK4ocPzxRBe3V0C68SwdzQM/8ty.ekimy/BMTk9AgC', 'ADMIN', 1, datetime('now'), datetime('now'));

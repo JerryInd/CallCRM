@@ -32,4 +32,7 @@ DROP TABLE IF EXISTS import_batches;
 
 -- 6. admin seed (original seed.sql hash was invalid — verified pre-existing bug)
 INSERT OR REPLACE INTO users (id, name, email, password_hash, role, active, created_at, updated_at)
-VALUES ('admin-001', 'Admin', 'admin@crm.com', '$2b$12$iaDHkJhy4g5K93QJMqeT3u3QDTDNrW5KTntjHs7Zk7XEa7IkR1aRy', 'ADMIN', 1, datetime('now'), datetime('now'));
+VALUES ('admin-001', 'Admin', 'canyoujerry@gmail.com', '$2b$12$.Z1xqL3iujzgK4ocPzxRBe3V0C68SwdzQM/8ty.ekimy/BMTk9AgC', 'ADMIN', 1, datetime('now'), datetime('now'));
+
+-- 6b. migrate an already-seeded default admin row to the new default credentials
+UPDATE users SET email = 'canyoujerry@gmail.com', password_hash = '$2b$12$.Z1xqL3iujzgK4ocPzxRBe3V0C68SwdzQM/8ty.ekimy/BMTk9AgC', updated_at = datetime('now') WHERE email = 'admin@crm.com';

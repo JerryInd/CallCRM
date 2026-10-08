@@ -19,7 +19,9 @@ import { autoAssignFollowUps } from './api/services/followup-assign';
 
 const PORT = Number(process.env.PORT || 8787);
 const DIST = path.resolve(process.cwd(), 'frontend/dist');
-const DB_FILE = path.resolve(process.cwd(), 'data/callcrm.sqlite');
+const DB_FILE = process.env.DB_PATH
+  ? path.resolve(process.env.DB_PATH)
+  : path.resolve(process.cwd(), 'data/callcrm.sqlite');
 
 mkdirSync(path.dirname(DB_FILE), { recursive: true });
 const sqlite = new DatabaseSync(DB_FILE);
