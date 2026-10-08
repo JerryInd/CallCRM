@@ -4,11 +4,13 @@ build/
 .expo/
 .wrangler/
 server/frontend/
+data/
 *.log
 *.db
 *.db-journal
 .env
 .env.*
+!frontend/.env.production
 .dev.vars*
 *.keystore
 local.properties

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "build": "esbuild src/node.ts --bundle --platform=node --format=esm --outfile=dist/server.js --packages=external --loader:.sql=text --log-level=warning",
+    "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply crm-d1",
     "db:seed": "tsx src/api/db/seed.ts",
@@ -13,18 +15,22 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.7",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.44.0",
     "hono": "^4.8.0",
     "jose": "^6.2.0",
+    "ws": "^8.18.0",
     "xlsx": "^0.18.5",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250910.0",
+    "@cloudflare/workers-types": "^5.20261006.1",
     "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.0",
     "drizzle-kit": "^0.31.0",
+    "esbuild": "^0.25.0",
     "typescript": "^5.7.0",
     "wrangler": "^4.50.0"
   }
