@@ -3,7 +3,7 @@
 // port (process.env.PORT), and runs the every-minute Sheets sync cron.
 import { serve } from '@hono/node-server';
 import { WebSocketServer, WebSocket } from 'ws';
-import { DatabaseSync } from 'node:sqlite';
+import Database from 'better-sqlite3';
 import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import type { IncomingMessage } from 'node:http';
@@ -22,7 +22,7 @@ const DIST = path.resolve(process.cwd(), 'frontend/dist');
 const DB_FILE = path.resolve(process.cwd(), 'data/callcrm.sqlite');
 
 mkdirSync(path.dirname(DB_FILE), { recursive: true });
-const sqlite = new DatabaseSync(DB_FILE);
+const sqlite = new Database(DB_FILE);
 initDatabase(sqlite);
 const env = createNodeBindings(sqlite);
 
