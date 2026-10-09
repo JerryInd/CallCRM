@@ -94,7 +94,7 @@ function staticHandler(req: Request): Response {
 const server = serve({
   fetch: (req) => {
     const { pathname } = new URL(req.url);
-    if (pathname.startsWith('/api/') || pathname === '/ws/chat') {
+    if (pathname.startsWith('/api/') || pathname === '/ws/chat' || pathname === '/download' || pathname === '/download/') {
       return app.fetch(req, env as any, undefined as any);
     }
     return staticHandler(req);

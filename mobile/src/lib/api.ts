@@ -1,7 +1,7 @@
 ﻿import { storage } from './storage';
 
-export const BASE_URL = 'http://192.168.1.100:8787';
-export const WS_URL = 'ws://192.168.1.100:8787';
+export const BASE_URL = 'https://api.lakshmiclub.com';
+export const WS_URL = 'wss://api.lakshmiclub.com';
 
 async function apiRequest(path: string, options: any = {}) {
   const token = await storage.getToken();
