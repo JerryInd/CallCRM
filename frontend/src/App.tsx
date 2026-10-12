@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import AgentPage from "./pages/AgentPage";
@@ -17,6 +17,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import AdminLayout from "./components/AdminLayout";
 import { safeJson } from "./lib/api";
 import { localMode, getStoredUser } from "./lib/localAuth";
+import { useIdleLogout } from "./lib/useIdleLogout";
 
 interface User {
   id: string;
@@ -79,6 +80,9 @@ function AppRoutes() {
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const handleIdleLogout = useCallback(() => setUser(null), []);
+  useIdleLogout(handleIdleLogout, user?.role === "AGENT");
 
   useEffect(() => {
     if (localMode) {

@@ -1,10 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { storage } from '../lib/storage';
-import { BASE_URL as API_BASE } from '../lib/api';
+import { BASE_URL as API_BASE, api } from '../lib/api';
 import DeviceRegistrationScreen from '../screens/DeviceRegistrationScreen';
 import LoginScreen from '../screens/LoginScreen';
 import CallingScreen from '../screens/CallingScreen';
@@ -12,9 +12,12 @@ import ChatScreen from '../screens/ChatScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import FollowUpsScreen from '../screens/FollowUpsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import { Platform, View } from 'react-native';
+import { Platform, View, AppState } from 'react-native';
 
 const Tab = createBottomTabNavigator();
+
+// Auto-logout after 30 minutes without any touch in the app (or 30 min backgrounded)
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -26,8 +29,31 @@ export default function AppNavigator() {
   const [isDeviceRegistered, setIsDeviceRegistered] = useState<boolean | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const lastActiveRef = useRef(Date.now());
+
+  const logoutForInactivity = useCallback(async () => {
+    try { await api.endSession(); } catch {}
+    await storage.clearAuth();
+    setIsAuthenticated(false);
+  }, []);
 
   useEffect(() => { checkAuthState(); }, []);
+
+  // Idle watchdog: active only while authenticated. Any touch resets the clock
+  // (see onTouchStart wrapper below); checks every 30s and on return from background.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    lastActiveRef.current = Date.now();
+    const interval = setInterval(() => {
+      if (Date.now() - lastActiveRef.current >= IDLE_TIMEOUT_MS) void logoutForInactivity();
+    }, 30_000);
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && Date.now() - lastActiveRef.current >= IDLE_TIMEOUT_MS) {
+        void logoutForInactivity();
+      }
+    });
+    return () => { clearInterval(interval); appStateSub.remove(); };
+  }, [isAuthenticated, logoutForInactivity]);
 
   const checkAuthState = async () => {
     try {
@@ -82,8 +108,9 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      <Tab.Navigator
+    <View style={{ flex: 1 }} onTouchStart={() => { lastActiveRef.current = Date.now(); }}>
+      <NavigationContainer>
+        <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarIcon: ({ focused, color, size }) => {
@@ -114,6 +141,7 @@ export default function AppNavigator() {
           {(props) => <ProfileScreen {...props} onLogout={handleLogout} />}
         </Tab.Screen>
       </Tab.Navigator>
-    </NavigationContainer>
+      </NavigationContainer>
+    </View>
   );
 }
