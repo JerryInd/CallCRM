@@ -49,10 +49,8 @@ app.route('/api/notifications', notificationsRouter);
 
 app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// Branded APK download link — always serves the latest GitHub release asset
-app.get('/download', (c) =>
-  c.redirect('https://github.com/JerryInd/CallCRM/releases/latest/download/CallCRM.apk', 302)
-);
+// Branded APK download link — serves the APK shipped in frontend/public
+app.get('/download', (c) => c.redirect('/CallCRM.apk', 302));
 
 // WebSocket route for chat — token via query param or auth cookie
 app.get('/ws/chat', async (c) => {

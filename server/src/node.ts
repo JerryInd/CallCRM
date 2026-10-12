@@ -51,6 +51,7 @@ const MIME: Record<string, string> = {
   '.txt': 'text/plain; charset=utf-8',
   '.map': 'application/json; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
+  '.apk': 'application/vnd.android.package-archive',
 };
 
 function staticHandler(req: Request): Response {
@@ -82,11 +83,13 @@ function staticHandler(req: Request): Response {
   const headers: Record<string, string> = {
     'Content-Type': MIME[ext] || 'application/octet-stream',
     'Cache-Control':
-      filePath.endsWith('index.html') || pathname.includes('/index.html')
+      filePath.endsWith('.apk')
         ? 'no-cache'
-        : pathname.startsWith('/assets/')
-          ? 'public, max-age=31536000, immutable'
-          : 'public, max-age=3600',
+        : filePath.endsWith('index.html') || pathname.includes('/index.html')
+          ? 'no-cache'
+          : pathname.startsWith('/assets/')
+            ? 'public, max-age=31536000, immutable'
+            : 'public, max-age=3600',
   };
   return new Response(new Uint8Array(body), { status: 200, headers });
 }
