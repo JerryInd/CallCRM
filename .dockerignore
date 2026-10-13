@@ -1,0 +1,15 @@
+.git
+**/node_modules
+**/dist
+data
+**/data
+mobile
+server/frontend
+*.log
+.env
+**/.env
+!**/.env.production
+.wrangler
+.expo
+ios
+android
