@@ -9,6 +9,7 @@ services:
       DB_PATH: /data/callcrm.sqlite
     volumes:
       - app-data:/data
+      - ./frontend/public/CallCRM.apk:/app/frontend/dist/CallCRM.apk:ro
 
   caddy:
     image: caddy:2-alpine
