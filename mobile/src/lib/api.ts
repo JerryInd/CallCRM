@@ -3,6 +3,37 @@
 export const BASE_URL = 'https://api.lakshmiclub.com';
 export const WS_URL = 'wss://api.lakshmiclub.com';
 
+type RefreshResult = 'ok' | 'invalid' | 'error';
+
+let refreshPromise: Promise<RefreshResult> | null = null;
+
+function tryRefreshToken(): Promise<RefreshResult> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const refreshToken = await storage.getRefreshToken();
+        if (!refreshToken) return 'invalid';
+        const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (!res.ok) return 'invalid';
+        const data: any = await res.json().catch(() => null);
+        if (!data || !data.token) return 'invalid';
+        await storage.setToken(data.token);
+        if (data.refreshToken) await storage.setRefreshToken(data.refreshToken);
+        return 'ok';
+      } catch {
+        return 'error';
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+  return refreshPromise;
+}
+
 async function apiRequest(path: string, options: any = {}) {
   const token = await storage.getToken();
   const headers: any = {
@@ -14,10 +45,28 @@ async function apiRequest(path: string, options: any = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, {
+  let response = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers,
   });
+
+  // Access tokens expire after 24h — transparently refresh and retry once
+  const isAuthAttempt =
+    path === '/api/auth/login' || path === '/api/auth/device-login' || path === '/api/auth/refresh';
+  if (response.status === 401 && !isAuthAttempt) {
+    const refreshed = await tryRefreshToken();
+    if (refreshed === 'ok') {
+      const newToken = await storage.getToken();
+      headers.Authorization = `Bearer ${newToken}`;
+      response = await fetch(`${BASE_URL}${path}`, {
+        ...options,
+        headers,
+      });
+    } else if (refreshed === 'invalid') {
+      // Refresh token rejected — session is dead, force a clean re-login
+      await storage.clearAuth();
+    }
+  }
 
   let data: any = null;
   try {
